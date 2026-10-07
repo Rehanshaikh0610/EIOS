@@ -58,9 +58,14 @@ services:
           cpus: "0.25"
 
   # ── Checkout ───────────────────────────────────────────────────────────────
-  # read_only + tmpfs already set in base; add security controls only.
   checkout:
     <<: *security-defaults
+    healthcheck:
+      test: ["CMD", "/bin/grpc_health_probe", "-addr=:5050", "-connect-timeout=10s", "-rpc-timeout=10s"]
+      interval: 15s
+      timeout: 15s
+      start_period: 30s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -126,15 +131,6 @@ services:
         limits:
           memory: 1500M
           cpus: "1.00"
-
-  # ── Payment ────────────────────────────────────────────────────────────────
-  payment:
-    <<: [*security-defaults, *readonly-tmp]
-    deploy:
-      resources:
-        limits:
-          memory: 140M
-          cpus: "0.50"
 
   # ── Product Catalog ────────────────────────────────────────────────────────
   # read_only + tmpfs already in base.
@@ -211,7 +207,6 @@ services:
   # ── PostgreSQL (astronomy-db) ──────────────────────────────────────────────
   # Remove the host port binding so DB is not reachable from outside Docker network.
   astronomy-db:
-    <<: *security-defaults
     ports: !reset []
     expose:
       - "${POSTGRES_PORT}"
@@ -220,7 +215,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 256M
           cpus: "0.50"
 
   # ── Valkey/Redis (valkey-cart) ─────────────────────────────────────────────

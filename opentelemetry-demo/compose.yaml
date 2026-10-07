@@ -490,11 +490,11 @@ services:
         - "/nodejs/bin/node"
         - "-e"
         - >-
-          const net=require('net');const c=new net.Socket();
-          c.setTimeout(2000);
-          c.connect(${PAYMENT_PORT},'127.0.0.1',()=>{c.destroy();process.exit(0)});
-          c.on('error',()=>process.exit(1));
-          c.on('timeout',()=>process.exit(1))
+          const {spawnSync}=require('child_process');
+          const env={...process.env};delete env.NODE_OPTIONS;
+          const result=spawnSync(process.execPath,['-e',
+          "const net=require('net');const c=new net.Socket();c.setTimeout(2000);c.connect(${PAYMENT_PORT},'127.0.0.1',()=>{c.destroy();process.exit(0)});c.on('error',()=>process.exit(1));c.on('timeout',()=>process.exit(1))"],{env,timeout:3000});
+          process.exit(result.error?1:result.status||0)
       start_period: 10s
       interval: 5s
       timeout: 5s
